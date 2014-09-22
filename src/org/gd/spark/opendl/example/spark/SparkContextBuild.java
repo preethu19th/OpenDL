@@ -9,31 +9,36 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 
 public class SparkContextBuild {
+    public static JavaSparkContext getContext(SparkContext sparkConf) throws Exception {
+        return new JavaSparkContext(sparkConf);
+    }
+
     public static JavaSparkContext getContext(String[] args) throws Exception {
-    	Options options = new Options();
-    	options.addOption("sparkMasterURL", "smurl", true, "spark master url");
-    	options.addOption("sparkJobName", "sjn", false, "my spark job name");
-    	options.addOption("sparkHomePath", "shp", true, "specify the spark home path");
-    	options.addOption("sparkJobJarPath", "jars", true, "specify the jar search path(directory)");
-    	
-    	CommandLineParser parser = new PosixParser();
-    	CommandLine cmd = parser.parse(options, args);
-    	
-    	/**
-    	 * jar list
-    	 */
-    	String[] sparkJobJarList = null;
-    	String jarsPath = cmd.getOptionValue("sparkJobJarPath");
+        Options options = new Options();
+        options.addOption("sparkMasterURL", "smurl", true, "spark master url");
+        options.addOption("sparkJobName", "sjn", false, "my spark job name");
+        options.addOption("sparkHomePath", "shp", true, "specify the spark home path");
+        options.addOption("sparkJobJarPath", "jars", true, "specify the jar search path(directory)");
+
+        CommandLineParser parser = new PosixParser();
+        CommandLine cmd = parser.parse(options, args);
+
+        /**
+         * jar list
+         */
+        String[] sparkJobJarList = null;
+        String jarsPath = cmd.getOptionValue("sparkJobJarPath");
         File jarDir = new File(jarsPath);
         if (!jarDir.isDirectory()) {
             throw new Exception(jarsPath + " is not a directory!");
         }
         File[] files = jarDir.listFiles();
         List<String> jars = new ArrayList<String>();
-        for (File file: files) {
+        for (File file : files) {
             if (file.isFile() && file.getName().endsWith(".jar")) {
                 jars.add(file.getPath());
             }
@@ -42,12 +47,12 @@ public class SparkContextBuild {
         for (int i = 0; i < sparkJobJarList.length; i++) {
             sparkJobJarList[i] = jars.get(i);
         }
-    	
+
         System.setProperty("spark.local.dir", cmd.getOptionValue("sparkHomePath") + File.separator + "temp");
-    	return new JavaSparkContext(cmd.getOptionValue("sparkMasterURL"), 
-    			cmd.getOptionValue("sparkJobName", "spark-job-" + System.currentTimeMillis()), 
-    			cmd.getOptionValue("sparkHomePath"), 
-    			sparkJobJarList, 
-    			new HashMap<String,String>());
+        return new JavaSparkContext(cmd.getOptionValue("sparkMasterURL"),
+                cmd.getOptionValue("sparkJobName", "spark-job-" + System.currentTimeMillis()),
+                cmd.getOptionValue("sparkHomePath"),
+                sparkJobJarList,
+                new HashMap<String, String>());
     }
 }
